@@ -94,7 +94,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-black p-4 flex flex-col">
       {/* Game Title */}
-      <h1 className="text-3xl font-bold text-white mb-4 text-center">Grid Adventure</h1>
+      <h1 className="text-3xl font-bold text-white mb-4 text-center">Roon Scape</h1>
       
       {/* Main Game Container */}
       <div className="flex-1 flex items-center justify-center">
