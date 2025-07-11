@@ -92,13 +92,13 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 p-4 flex flex-col">
+    <div className="min-h-screen bg-black p-4 flex flex-col">
       {/* Game Title */}
       <h1 className="text-3xl font-bold text-white mb-4 text-center">Grid Adventure</h1>
       
       {/* Main Game Container */}
       <div className="flex-1 flex items-center justify-center">
-        <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
+        <div className="bg-neutral-900 p-6 rounded-lg shadow-xl">
           {/* Grid */}
           <div className="grid grid-cols-10 gap-1">
             {Array.from({ length: GRID_SIZE * GRID_SIZE }).map((_, index) => {
@@ -109,8 +109,8 @@ export default function Home() {
               return (
                 <div
                   key={index}
-                  className={`w-12 h-12 border border-gray-600 flex items-center justify-center ${
-                    isPlayer ? 'bg-gray-700' : 'bg-gray-900'
+                  className={`w-12 h-12 border border-neutral-700 flex items-center justify-center ${
+                    isPlayer ? 'bg-neutral-800' : 'bg-black'
                   }`}
                 >
                   {isPlayer && (
@@ -126,7 +126,7 @@ export default function Home() {
       {/* Bottom Controls */}
       <div className="flex items-end gap-4 mt-4">
         {/* Chat Window */}
-        <div className="flex-1 bg-gray-800 rounded-lg p-4 flex flex-col h-64">
+        <div className="flex-1 bg-neutral-900 rounded-lg p-4 flex flex-col h-64">
           {/* Chat History */}
           <div className="flex-1 overflow-y-auto mb-3 space-y-2">
             {chatHistory.map((msg, index) => (
@@ -155,18 +155,18 @@ export default function Home() {
               value={command}
               onChange={(e) => setCommand(e.target.value)}
               placeholder="Type command..."
-              className="w-full px-3 py-2 bg-gray-700 text-white border border-gray-600 rounded focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 bg-black text-white border border-neutral-700 rounded focus:outline-none focus:border-blue-500"
             />
           </form>
         </div>
 
         {/* Player Image */}
-        <div className="bg-gray-800 p-4 rounded-lg">
+        <div className="bg-neutral-900 p-4 rounded-lg">
           <Image
             src="/player.png"
             alt="Player"
-            width={200}
-            height={200}
+            width={300}
+            height={300}
             className="rounded"
           />
         </div>
