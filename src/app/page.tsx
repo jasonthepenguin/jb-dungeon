@@ -1,103 +1,176 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
+
+const GRID_SIZE = 10; // 10x10 grid
+
+interface ChatMessage {
+  type: 'command' | 'response' | 'error';
+  text: string;
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [playerPosition, setPlayerPosition] = useState({ x: 0, y: 0 });
+  const [command, setCommand] = useState('');
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
+    { type: 'response', text: 'Welcome to Grid Adventure! Type commands like "up 2" or "right 3" to move.' }
+  ]);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    // Focus on input when component mounts
+    inputRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    // Scroll to bottom when chat updates
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatHistory]);
+
+  const addChatMessage = (type: ChatMessage['type'], text: string) => {
+    setChatHistory(prev => [...prev, { type, text }]);
+  };
+
+  const handleCommand = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!command.trim()) return;
+
+    // Add command to chat
+    addChatMessage('command', command);
+
+    const parts = command.trim().toLowerCase().split(' ');
+    if (parts.length !== 2) {
+      addChatMessage('error', 'Invalid command! Use format: "direction number" (e.g., "up 2")');
+      setCommand('');
+      return;
+    }
+
+    const [direction, distanceStr] = parts;
+    const distance = parseInt(distanceStr);
+
+    if (isNaN(distance) || distance < 1) {
+      addChatMessage('error', 'Invalid distance! Please enter a positive number.');
+      setCommand('');
+      return;
+    }
+
+    let newX = playerPosition.x;
+    let newY = playerPosition.y;
+
+    switch (direction) {
+      case 'up':
+        newY = playerPosition.y - distance;
+        break;
+      case 'down':
+        newY = playerPosition.y + distance;
+        break;
+      case 'left':
+        newX = playerPosition.x - distance;
+        break;
+      case 'right':
+        newX = playerPosition.x + distance;
+        break;
+      default:
+        addChatMessage('error', 'Invalid direction! Use: up, down, left, or right');
+        setCommand('');
+        return;
+    }
+
+    // Check boundaries
+    if (newX < 0 || newX >= GRID_SIZE || newY < 0 || newY >= GRID_SIZE) {
+      addChatMessage('error', `Can't move there! Stay within the ${GRID_SIZE}x${GRID_SIZE} grid.`);
+      setCommand('');
+      return;
+    }
+
+    setPlayerPosition({ x: newX, y: newY });
+    addChatMessage('response', `Moved ${direction} ${distance} square${distance > 1 ? 's' : ''}. Now at position (${newX}, ${newY})`);
+    setCommand('');
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-900 p-4 flex flex-col">
+      {/* Game Title */}
+      <h1 className="text-3xl font-bold text-white mb-4 text-center">Grid Adventure</h1>
+      
+      {/* Main Game Container */}
+      <div className="flex-1 flex items-center justify-center">
+        <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
+          {/* Grid */}
+          <div className="grid grid-cols-10 gap-1">
+            {Array.from({ length: GRID_SIZE * GRID_SIZE }).map((_, index) => {
+              const x = index % GRID_SIZE;
+              const y = Math.floor(index / GRID_SIZE);
+              const isPlayer = x === playerPosition.x && y === playerPosition.y;
+              
+              return (
+                <div
+                  key={index}
+                  className={`w-12 h-12 border border-gray-600 flex items-center justify-center ${
+                    isPlayer ? 'bg-gray-700' : 'bg-gray-900'
+                  }`}
+                >
+                  {isPlayer && (
+                    <div className="w-8 h-8 bg-blue-500 rounded-full"></div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+      </div>
+
+      {/* Bottom Controls */}
+      <div className="flex items-end gap-4 mt-4">
+        {/* Chat Window */}
+        <div className="flex-1 bg-gray-800 rounded-lg p-4 flex flex-col h-64">
+          {/* Chat History */}
+          <div className="flex-1 overflow-y-auto mb-3 space-y-2">
+            {chatHistory.map((msg, index) => (
+              <div
+                key={index}
+                className={`text-sm ${
+                  msg.type === 'command'
+                    ? 'text-blue-400'
+                    : msg.type === 'error'
+                    ? 'text-red-400'
+                    : 'text-gray-300'
+                }`}
+              >
+                {msg.type === 'command' && '> '}
+                {msg.text}
+              </div>
+            ))}
+            <div ref={chatEndRef} />
+          </div>
+          
+          {/* Command Input */}
+          <form onSubmit={handleCommand}>
+            <input
+              ref={inputRef}
+              type="text"
+              value={command}
+              onChange={(e) => setCommand(e.target.value)}
+              placeholder="Type command..."
+              className="w-full px-3 py-2 bg-gray-700 text-white border border-gray-600 rounded focus:outline-none focus:border-blue-500"
+            />
+          </form>
+        </div>
+
+        {/* Player Image */}
+        <div className="bg-gray-800 p-4 rounded-lg">
           <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+            src="/player.png"
+            alt="Player"
+            width={200}
+            height={200}
+            className="rounded"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        </div>
+      </div>
     </div>
   );
 }
